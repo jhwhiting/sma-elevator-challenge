@@ -1,9 +1,17 @@
 # sma-elevator-challenge
 The Elevator Coding Challenge for SMA
 
+## Framework
+Net 7.0
+
+## To Run
+`dotnet run` in the `Console` directory.
+`dotnet test` in the `Tests` directory.
+
 ## Methodology
 Domain Driven Design (Eric Evans)
-TDD (somewhat, this was really handy for finding the edge cases, and I'm sure I didn't find them all!)
+
+TDD (this was really handy for finding some of the edge cases)
 
 Domain: the layer that holds the business rules and behaviors. It is supposed to be as pure as possible and not reference other layers.
 
