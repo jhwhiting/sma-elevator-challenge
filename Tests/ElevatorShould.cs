@@ -226,4 +226,36 @@ public class ElevatorShould
         Assert.True(sensorDataEntries.Any());
         Assert.True(sensorDataEntries.Count(sensorDataEntry => sensorDataEntry.ElevatorEvent == ElevatorEvent.WaitOnFloor) == 3);
     }
+
+    [Fact]
+    public async Task Rise_To_Fall_To_One()
+    {
+        // Arrange
+        var sensorDataEntries = new List<ElevatorSensorData>();
+
+        void RecordSensorData(object? sender, ElevatorSensorData sensorData)
+        {
+            sensorDataEntries.Add(sensorData);
+        }
+
+        await using (var elevator = new Elevator(int.MaxValue, 9))
+        {
+            sensorDataEntries.Add(elevator.ElevatorSensorData);
+
+            elevator.ElevatorSensorDataGenerated += RecordSensorData;
+
+            var elevatorInputInterpreter = new ElevatorInputInterpreter(elevator, logger);
+
+            // Act
+            elevatorInputInterpreter.ReadInput("3");
+            await Task.Delay(5000).ConfigureAwait(false);
+            elevatorInputInterpreter.ReadInput("1U");
+
+            await elevator.DrainInput().ConfigureAwait(false);
+
+            // Assert
+            Assert.True(elevator.ElevatorSensorData.CurrentFloor == 1);
+            Assert.True(elevator.ElevatorSensorData.MovementState == MovementState.Stopped);
+        }
+    }
 }

@@ -115,6 +115,10 @@ public class Elevator : IEntity, IAsyncDisposable
             UpdateSensor(currentFloor, currentFloor, MovementDirection.Down, MovementState.Stopped, ElevatorEvent.Blocked);
             await Task.Delay(TimeSpan.FromSeconds(5));
         }
+        else
+        {
+            UpdateSensor(currentFloor, currentFloor, MovementDirection.Down, MovementState.Stopped, ElevatorEvent.ChangeDirections);
+        }
 
         return false;
     }
@@ -158,6 +162,10 @@ public class Elevator : IEntity, IAsyncDisposable
         {
             UpdateSensor(currentFloor, currentFloor, MovementDirection.Up, MovementState.Stopped, ElevatorEvent.Blocked); /// not sure what do here
             await Task.Delay(TimeSpan.FromSeconds(5));
+        }
+        else
+        {
+            UpdateSensor(currentFloor, currentFloor, MovementDirection.Up, MovementState.Stopped, ElevatorEvent.ChangeDirections);
         }
 
         return false;
