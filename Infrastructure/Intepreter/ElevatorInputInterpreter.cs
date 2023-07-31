@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Infrastructure.Interpreter;
 
-public class ElevatorInputInterpreter : IElevatorInputInterpreter, IDisposable
+public class ElevatorInputInterpreter : IElevatorInputInterpreter
 {
     private readonly Elevator elevator;
     private readonly ILogger logger;
@@ -126,8 +126,16 @@ public class ElevatorInputInterpreter : IElevatorInputInterpreter, IDisposable
         return null;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
+        try
+        {
+            await elevator.DrainInput().ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        
         elevator.ButtonPressed -= LogButtonPressed;
         elevator.ElevatorSensorDataGenerated -= LogElevatorSensorDataGenerated;
     }
