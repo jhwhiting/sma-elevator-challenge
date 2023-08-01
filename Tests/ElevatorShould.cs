@@ -1,20 +1,20 @@
 using Domain.Entities;
 using Domain.Enums;
 using Domain.ValueObjects;
-using Infrastructure.Debug;
 using Infrastructure.Interpreter;
 using Serilog;
-using Serilog.Core;
 
 namespace Tests;
 
 public class ElevatorShould
 {
-    private ILogger logger = Logger.None;
+    private static readonly ILogger logger = new LoggerConfiguration().WriteTo.Console().WriteTo.File("test.txt").CreateLogger();
 
     [Fact]
     public async Task No_Op()
     {
+        logger.Information(nameof(No_Op));
+
         // Arrange
         await using (var elevator = new Elevator(int.MaxValue, 9))
         {
@@ -36,10 +36,11 @@ public class ElevatorShould
     [Fact]
     public async Task Not_Stop_When_Overloaded_Unless_Pressed_Inside()
     {
+        logger.Information(nameof(Not_Stop_When_Overloaded_Unless_Pressed_Inside));
+
         // Arrange
         await using (var elevator = new Elevator(200, 9))
         {
-            using var elevatorDebugWriter = new ElevatorDebugWriter(elevator);
             var elevatorInputInterpreter = new ElevatorInputInterpreter(elevator, logger);
 
             // open floor 1
@@ -76,10 +77,11 @@ public class ElevatorShould
     [Fact]
     public async Task Recover_From_Block()
     {
+        logger.Information(nameof(Recover_From_Block));
+
         // Arrange
         await using (var elevator = new Elevator(200, 9))
         {
-            using var elevatorDebugWriter = new ElevatorDebugWriter(elevator);
             var elevatorInputInterpreter = new ElevatorInputInterpreter(elevator, logger);
 
             // Act        
@@ -102,6 +104,8 @@ public class ElevatorShould
     [Fact]
     public async Task Rise_One_Floor()
     {
+        logger.Information(nameof(Rise_One_Floor));
+
         // Arrange
         await using (var elevator = new Elevator(int.MaxValue, 9))
         {
@@ -125,6 +129,8 @@ public class ElevatorShould
     [Fact]
     public async Task Rise_One_Then_Two_Then_One_Then_Go_Back_Down()
     {
+        logger.Information(nameof(Rise_One_Then_Two_Then_One_Then_Go_Back_Down));
+
         // Arrange
         await using (var elevator = new Elevator(int.MaxValue, 9))
         {
@@ -147,8 +153,10 @@ public class ElevatorShould
     [Fact]
     public async Task Rise_Three_Floors_And_Fall_Two()
     {
+        logger.Information(nameof(Rise_Three_Floors_And_Fall_Two));
+
         // Arrange
-        var elevator = new Elevator(int.MaxValue, 9);
+        await using var elevator = new Elevator(int.MaxValue, 9);
         var elevatorInputInterpreter = new ElevatorInputInterpreter(elevator, logger);
 
         // Act
@@ -167,6 +175,8 @@ public class ElevatorShould
     [Fact]
     public async Task Rise_One_Floor_And_Fall_One_Generate_Logs()
     {
+        logger.Information(nameof(Rise_One_Floor_And_Fall_One_Generate_Logs));
+
         // Arrange
         var sensorDataEntries = new List<ElevatorSensorData>();
 
@@ -195,6 +205,8 @@ public class ElevatorShould
     [Fact]
     public async Task Rise_Three_Floors_And_Stop_At_Each()
     {
+        logger.Information(nameof(Rise_Three_Floors_And_Stop_At_Each));
+
         // Arrange
         var sensorDataEntries = new List<ElevatorSensorData>();
 
@@ -228,8 +240,10 @@ public class ElevatorShould
     }
 
     [Fact]
-    public async Task Rise_To_Fall_To_One()
+    public async Task Rise_Two_Fall_To_One()
     {
+        logger.Information(nameof(Rise_Two_Fall_To_One));
+
         // Arrange
         var sensorDataEntries = new List<ElevatorSensorData>();
 
