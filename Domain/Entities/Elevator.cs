@@ -87,7 +87,6 @@ public class Elevator : IEntity, IAsyncDisposable
         }
 
         var getOff = buttonPressLookupResult.CurrentFloorPresses.Any(cfp => cfp.MovementDirection == MovementDirection.Inside);
-
         if (currentFloor < buttonPressLookupResult.LastFloor) // rise one floor
         {
             var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Up);
@@ -135,7 +134,6 @@ public class Elevator : IEntity, IAsyncDisposable
         }
 
         var getOff = buttonPressLookupResult.CurrentFloorPresses.Any(cfp => cfp.MovementDirection == MovementDirection.Inside);
-
         if (currentFloor > buttonPressLookupResult.LastFloor) // fall one floor
         {
             var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Down);
