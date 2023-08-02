@@ -62,10 +62,8 @@ public class Elevator : IEntity, IAsyncDisposable
                     }
                 }
 
-                if (inputSemaphore.CurrentCount == 0)
-                {
-                    UpdateSensor(ElevatorSensorData.CurrentFloor, ElevatorSensorData.CurrentFloor, ElevatorSensorData.MovementDirection, MovementState.Stopped, ElevatorEvent.Idling);
-                }
+                // this can run multiple times ... (bug)
+                UpdateSensor(ElevatorSensorData.CurrentFloor, ElevatorSensorData.CurrentFloor, ElevatorSensorData.MovementDirection, MovementState.Stopped, ElevatorEvent.Idling);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
