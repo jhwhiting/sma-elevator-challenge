@@ -62,7 +62,7 @@ public class Elevator : IEntity, IAsyncDisposable
                     }
                 }
 
-                if (!buttonPressLookup.Any())
+                if (inputSemaphore.CurrentCount == 0)
                 {
                     UpdateSensor(ElevatorSensorData.CurrentFloor, ElevatorSensorData.CurrentFloor, ElevatorSensorData.MovementDirection, MovementState.Stopped, ElevatorEvent.Idling);
                 }
