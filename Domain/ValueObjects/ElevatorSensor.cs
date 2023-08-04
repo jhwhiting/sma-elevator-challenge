@@ -2,7 +2,7 @@ using Domain.Enums;
 
 namespace Domain.ValueObjects;
 
-public record struct ElevatorSensorData : IValueObject
+public readonly record struct ElevatorSensorData : IValueObject
 {
     public required MovementDirection MovementDirection { get; init; }
 

@@ -71,6 +71,7 @@ public class ButtonPressLookup // should this be something like a Priority Queue
         {
             CurrentFloorPresses = currentFloorButtonPresses,
             LastFloorPresses = lastFloorButtonPresses,
+            CurrentFloor = currentFloor,
             LastFloor = lastFloor
         };
     }
@@ -101,6 +102,7 @@ public class ButtonPressLookup // should this be something like a Priority Queue
         {
             CurrentFloorPresses = currentFloorButtonPresses,
             LastFloorPresses = lastFloorButtonPresses,
+            CurrentFloor = currentFloor,
             LastFloor = lastFloor
         };
     }

@@ -48,6 +48,8 @@ public class Elevator : IEntity, IAsyncDisposable
         {
             try
             {
+                UpdateSensor(ElevatorSensorData.CurrentFloor, ElevatorSensorData.CurrentFloor, ElevatorSensorData.MovementDirection, MovementState.Stopped, ElevatorEvent.Idling);
+
                 await inputSemaphore.WaitAsync().ConfigureAwait(false);
 
                 while (buttonPressLookup.Any())
@@ -61,9 +63,6 @@ public class Elevator : IEntity, IAsyncDisposable
                         while (await GoDown().ConfigureAwait(false)) { }
                     }
                 }
-
-                // this can run multiple times ... (bug)
-                UpdateSensor(ElevatorSensorData.CurrentFloor, ElevatorSensorData.CurrentFloor, ElevatorSensorData.MovementDirection, MovementState.Stopped, ElevatorEvent.Idling);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
@@ -86,13 +85,12 @@ public class Elevator : IEntity, IAsyncDisposable
             return false;
         }
 
-        var getOff = buttonPressLookupResult.CurrentFloorPresses.Any(cfp => cfp.MovementDirection == MovementDirection.Inside);
         if (currentFloor < buttonPressLookupResult.LastFloor) // rise one floor
         {
-            var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Up);
+            var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult, MovementDirection.Up);
             if (waitOnFloor)
             {
-                await WaitOnFloor(currentFloor, MovementDirection.Up, getOff).ConfigureAwait(false);
+                await WaitOnFloor(buttonPressLookupResult, MovementDirection.Up).ConfigureAwait(false);
             }
 
             await TravelBetweenFloors(currentFloor, currentFloor + 1, MovementDirection.Up).ConfigureAwait(false);
@@ -103,7 +101,7 @@ public class Elevator : IEntity, IAsyncDisposable
         bool waitOnLastFloor = DecideToWaitOnLastFloor(buttonPressLookupResult);
         if (waitOnLastFloor)
         {
-            await WaitOnLastFloor(currentFloor, MovementDirection.Up, getOff).ConfigureAwait(false);
+            await WaitOnLastFloor(buttonPressLookupResult, MovementDirection.Up).ConfigureAwait(false);
             if (buttonPressLookupResult.LastFloorPresses.Any(bp => bp.MovementDirection == MovementDirection.Down))
             {
                 UpdateSensor(currentFloor, currentFloor, MovementDirection.Down, MovementState.Stopped, ElevatorEvent.ChangeDirections);
@@ -133,13 +131,12 @@ public class Elevator : IEntity, IAsyncDisposable
             return false;
         }
 
-        var getOff = buttonPressLookupResult.CurrentFloorPresses.Any(cfp => cfp.MovementDirection == MovementDirection.Inside);
         if (currentFloor > buttonPressLookupResult.LastFloor) // fall one floor
         {
-            var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Down);
+            var waitOnFloor = DecideToWaitOnFloor(buttonPressLookupResult, MovementDirection.Down);
             if (waitOnFloor)
             {
-                await WaitOnFloor(currentFloor, MovementDirection.Down, getOff).ConfigureAwait(false);
+                await WaitOnFloor(buttonPressLookupResult, MovementDirection.Down).ConfigureAwait(false);
             }
 
             await TravelBetweenFloors(currentFloor, currentFloor - 1, MovementDirection.Down).ConfigureAwait(false);
@@ -150,7 +147,7 @@ public class Elevator : IEntity, IAsyncDisposable
         var waitOnLastFloor = DecideToWaitOnLastFloor(buttonPressLookupResult);
         if (waitOnLastFloor)
         {
-            await WaitOnLastFloor(currentFloor, MovementDirection.Down, getOff).ConfigureAwait(false);
+            await WaitOnLastFloor(buttonPressLookupResult, MovementDirection.Down).ConfigureAwait(false);
             if (buttonPressLookupResult.LastFloorPresses.Any(bp => bp.MovementDirection == MovementDirection.Up))
             {
                 UpdateSensor(currentFloor, currentFloor, MovementDirection.Up, MovementState.Stopped, ElevatorEvent.ChangeDirections);
@@ -171,12 +168,12 @@ public class Elevator : IEntity, IAsyncDisposable
 
     private bool DecideToWaitOnLastFloor(ButtonPressLookupResult buttonPressLookupResult)
     {
-        return DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Up) || DecideToWaitOnFloor(buttonPressLookupResult.CurrentFloorPresses, MovementDirection.Down);
+        return DecideToWaitOnFloor(buttonPressLookupResult, MovementDirection.Up) || DecideToWaitOnFloor(buttonPressLookupResult, MovementDirection.Down);
     }
 
-    private bool DecideToWaitOnFloor(ButtonPress[] currentFloorPresses, MovementDirection movementDirection)
+    private bool DecideToWaitOnFloor(ButtonPressLookupResult buttonPressLookupResult, MovementDirection movementDirection)
     {
-        var waitQuery = currentFloorPresses.Where(cf => cf.MovementDirection == movementDirection || cf.MovementDirection == MovementDirection.Inside);
+        var waitQuery = buttonPressLookupResult.CurrentFloorPresses.Where(cf => cf.MovementDirection == movementDirection || cf.MovementDirection == MovementDirection.Inside);
 
         if (occupants.Sum() > maxWeight)
         {
@@ -236,7 +233,6 @@ public class Elevator : IEntity, IAsyncDisposable
         if (buttonPressLookup.Add(floor, buttonPress))
         {
             ButtonPressed(this, buttonPress);
-
             inputSemaphore.Release();
         }
     }
@@ -256,7 +252,6 @@ public class Elevator : IEntity, IAsyncDisposable
         if (buttonPressLookup.Add(floor, buttonPress))
         {
             ButtonPressed(this, buttonPress);
-
             inputSemaphore.Release();
         }
     }
@@ -302,8 +297,10 @@ public class Elevator : IEntity, IAsyncDisposable
         await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
     }
 
-    private Task WaitOnLastFloor(int currentFloor, MovementDirection movementDirection, bool getOff)
+    private Task WaitOnLastFloor(ButtonPressLookupResult buttonPressLookupResult, MovementDirection movementDirection)
     {
+        var currentFloor = buttonPressLookupResult.CurrentFloor;
+
         var insideButtonPress = new ButtonPress { Floor = currentFloor, MovementDirection = MovementDirection.Inside };
         var outsideUpButtonPress = new ButtonPress { Floor = currentFloor, MovementDirection = MovementDirection.Up };
         var outsideDownButtonPress = new ButtonPress { Floor = currentFloor, MovementDirection = MovementDirection.Down };
@@ -312,11 +309,14 @@ public class Elevator : IEntity, IAsyncDisposable
         buttonPressLookup.Remove(currentFloor, outsideDownButtonPress);
         buttonPressLookup.Remove(currentFloor, insideButtonPress);
 
-        return WaitOnFloor(currentFloor, movementDirection, getOff);
+        return WaitOnFloor(buttonPressLookupResult, movementDirection);
     }
 
-    private async Task WaitOnFloor(int currentFloor, MovementDirection movementDirection, bool getOff)
+    private async Task WaitOnFloor(ButtonPressLookupResult buttonPressLookupResult, MovementDirection movementDirection)
     {
+        var currentFloor = buttonPressLookupResult.CurrentFloor;
+        var getOff = buttonPressLookupResult.CurrentFloorPresses.Any(cfp => cfp.MovementDirection == MovementDirection.Inside);
+
         UpdateSensor(currentFloor, currentFloor, movementDirection, MovementState.Stopped, ElevatorEvent.WaitOnFloor);
 
         if (getOff)

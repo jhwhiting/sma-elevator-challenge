@@ -2,9 +2,10 @@ using Domain.ValueObjects;
 
 namespace Domain.DataStructures;
 
-public record struct ButtonPressLookupResult
+public readonly record struct ButtonPressLookupResult
 {
     public required ButtonPress[] CurrentFloorPresses { get; init; }
     public required ButtonPress[] LastFloorPresses { get; init; }
-    public int LastFloor { get; internal set; }
+    public required int CurrentFloor { get; init; }
+    public required int LastFloor { get; init; }
 }
